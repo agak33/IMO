@@ -1,89 +1,53 @@
 #include <iostream>
 #include <fstream>
-#include <algorithm>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <cmath>
 #include <set>
 #include <cstdlib>
 #include <ctime>
 #include <utility>
 #include <tuple>
-#include<map>
+#include <map>
+
+#include "utils.hpp"
+
 using namespace std;
 
-void read_file(string file_name, int* n, vector<vector<int>>& cords)
-{
-	ifstream file(file_name);
-	string line;
-	int line_number = 0;
-	bool tmp = file.good();
-	while (getline(file, line))
-	{
-		line_number++;
-		if (line_number == 4)
-		{
-			line = line.substr(10);
-			*n = stoi(line);
-		}
-		if (line_number == 6)
-		{
-			break;
-		}
-	}
-	cords.resize(*n);
-	for (int i = 0; i < *n; i++)
-	{
-		int a, b, c;
-		file >> a >> b >> c;
-		cords[i].push_back(b);
-		cords[i].push_back(c);
-	}
-	file.close();
-}
 
-int find_farthest_vertex(vector<vector<int>>& matrix, int  n, int v, set<int>& remaining)
+void nearest_neighbour(const vector<vector<int>>& matrix, int  n, vector<vector<int>>& cycles, int start_cycle = -1)
 {
-	int max_distance = -1;
-	int max_vertex = -1;
-	for (auto it = remaining.begin(); it != remaining.end(); ++it)
-	{
-		if (matrix[*it - 1][v - 1] > max_distance)
-		{
-			max_distance = matrix[*it - 1][v - 1];
-			max_vertex = *it;
-		}
+	set<int> remaining;
+	for(int i = 1; i <= n; i++) {
+		remaining.insert(i);
 	}
-	return max_vertex;
-}
+	int v1 = start_cycle == -1 ? rand() % n + 1 : start_cycle;
+	int v2 = find_farthest_vertex(matrix, n, v1, remaining);
 
-int find_nearest_vertex(vector<vector<int>>& matrix, int v, set<int>& remaining)
-{
-	int min_distance = 1e9;
-	int min_vertex = -1;
-	for (auto it = remaining.begin(); it != remaining.end(); ++it)
+	add_vertex_to_cycle(v1, cycles[0], remaining);
+	add_vertex_to_cycle(v2, cycles[1], remaining);
+
+	while(!remaining.empty())
 	{
-		if (matrix[*it - 1][v - 1] < min_distance && matrix[*it - 1][v - 1] > 0)
-		{
-			min_distance = matrix[*it-1][v - 1];
-			min_vertex = *it;
+		for(int i = 0; i < 2; i++){
+			int vertex_begin = cycles[i][0];
+			int vertex_end = cycles[i][cycles[i].size() - 1];
+
+			int nearest_vertex_begin = find_nearest_vertex(matrix, vertex_begin, remaining);
+			int nearest_vertex_end = find_nearest_vertex(matrix, vertex_end, remaining);
+
+			if(matrix[vertex_begin - 1][nearest_vertex_begin - 1] <= matrix[vertex_end - 1][nearest_vertex_end - 1]){
+				add_vertex_to_cycle(nearest_vertex_begin, cycles[i], remaining);
+			} else {
+				add_vertex_to_cycle(nearest_vertex_end, cycles[i], remaining);
+			}
 		}
 	}
-	return min_vertex;
 }
 
 
-void make_distance_matrix(vector<vector<int>>& coords, vector<vector<int>>& matrix, int  n)
-{
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n; j++)
-		{
-			matrix[i][j] = round(sqrt(pow(coords[i][0] - coords[j][0], 2) + pow(coords[i][1] - coords[j][1], 2)));
-		}
-	}
-}
-pair<int, int> score_extention_cycle(vector<vector<int>>& matrix, vector<int>& cycle, set<int>& remaining)
+pair<int, int> score_extention_cycle(const vector<vector<int>>& matrix, vector<int>& cycle, set<int>& remaining)
 {
 	int min_score = 1e9;
 	int min_index = -1;
@@ -104,7 +68,7 @@ pair<int, int> score_extention_cycle(vector<vector<int>>& matrix, vector<int>& c
 	}
 	return { min_index, min_vertex };
 }
-void greedy_cycle(vector<vector<int>>& matrix, int  n, vector<vector<int>>& cycles, int start_cycle = -1)
+void greedy_cycle(const vector<vector<int>>& matrix, int  n, vector<vector<int>>& cycles, int start_cycle = -1)
 {
 	int v1;
 	if (start_cycle == -1)
@@ -120,7 +84,7 @@ void greedy_cycle(vector<vector<int>>& matrix, int  n, vector<vector<int>>& cycl
 	{
 		remaining.insert(i);
 	}
-	
+
 	remaining.erase(v1);
 	cycles[0].push_back(v1);
 	int v2 = find_farthest_vertex(matrix, n, v1, remaining);
@@ -144,7 +108,7 @@ void greedy_cycle(vector<vector<int>>& matrix, int  n, vector<vector<int>>& cycl
 	}
 	return;
 }
-pair<int, int> regret2(vector<vector<int>>& matrix, set<int>& remaining, vector<int>& cycle)
+pair<int, int> regret2(const vector<vector<int>>& matrix, set<int>& remaining, vector<int>& cycle)
 {
 	vector<vector<float>> regrets(remaining.size());
 	int n = cycle.size();
@@ -164,7 +128,7 @@ pair<int, int> regret2(vector<vector<int>>& matrix, set<int>& remaining, vector<
 				cc++;
 			}
 			regrets[m[*it - 1]][i] = matrix[cycle[i] - 1][*it - 1] + matrix[*it - 1][cycle[(i + 1) % n] - 1] - matrix[cycle[i] - 1][cycle[(i + 1) % n] - 1];
-			
+
 		}
 	}
 	vector<vector<float>> tmp_regrets;
@@ -184,7 +148,7 @@ pair<int, int> regret2(vector<vector<int>>& matrix, set<int>& remaining, vector<
 		{
 			 tmp_regret = tmp_regrets[j][1] - 1.37 *  tmp_regrets[j][0];
 		}
-		
+
 		if (max_regret <= tmp_regret)
 		{
 			max_regret = tmp_regret;
@@ -207,7 +171,7 @@ pair<int, int> regret2(vector<vector<int>>& matrix, set<int>& remaining, vector<
 	}
 
 }
-void regrest_heuristics(vector<vector<int>>& matrix, int  n, vector<vector<int>>& cycles, int start_vertex = -1)
+void regrest_heuristics(const vector<vector<int>>& matrix, int  n, vector<vector<int>>& cycles, int start_vertex = -1)
 {
 	set<int> remaining;
 	for (int i = 1; i <= n; i++)
@@ -226,15 +190,20 @@ void regrest_heuristics(vector<vector<int>>& matrix, int  n, vector<vector<int>>
 	cycles[0].push_back(v1);
 	remaining.erase(v1);
 	int v2 = find_farthest_vertex(matrix, n, v1, remaining);
+
 	cycles[1].push_back(v2);
 	remaining.erase(v2);
+
 	int licznik = 0;
+
 	v1 = find_nearest_vertex(matrix, v1, remaining);
 	cycles[0].push_back(v1);
 	remaining.erase(v1);
+
 	v2 = find_nearest_vertex(matrix, v2, remaining);
 	cycles[1].push_back(v2);
 	remaining.erase(v2);
+
 	while (!remaining.empty())
 	{
 		for (int i = 0; i < 2; i++)
@@ -248,7 +217,7 @@ void regrest_heuristics(vector<vector<int>>& matrix, int  n, vector<vector<int>>
 	return;
 
 }
-int score_cycle(vector<vector<int>>& matrix, vector<int>& cycle)
+int score_cycle(const vector<vector<int>>& matrix, vector<int>& cycle)
 {
 	int score = 0;
 	int n = cycle.size();
@@ -258,19 +227,9 @@ int score_cycle(vector<vector<int>>& matrix, vector<int>& cycle)
 	}
 	return score;
 }
-void save_cycles_to_file(string file_name, vector<vector<int>>& cycles)
-{
-	ofstream File(file_name);
-	for (int i = 0; i < cycles.size(); i++)
-	{
-		for (int j = 0; j < cycles[i].size(); j++)
-		{
-			File << cycles[i][j] << "\n";
-		}
-	}
-}
 
-void evaluation_algorithm(string algorithm, string instance,  vector<vector<int>>& matrix, int n)
+
+void evaluation_algorithm(string algorithm, string instance,  const vector<vector<int>>& matrix, int n)
 {
 	int min_vertex=1;
 	int max_vertex=1;
@@ -282,11 +241,15 @@ void evaluation_algorithm(string algorithm, string instance,  vector<vector<int>
 		if (algorithm == "regret")
 		{
 			regrest_heuristics(matrix, n, results[i - 1].second, i);
-			
+
 		}
 		if (algorithm == "cycle")
 		{
 			greedy_cycle(matrix, n, results[i - 1].second, i);
+		}
+		if (algorithm == "neighbour")
+		{
+			nearest_neighbour(matrix, n, results[i - 1].second, i);
 		}
 		results[i - 1].first = score_cycle(matrix, results[i - 1].second[0]) + score_cycle(matrix, results[i - 1].second[1]);
 	}
@@ -300,21 +263,22 @@ void evaluation_algorithm(string algorithm, string instance,  vector<vector<int>
 	cout << algorithm +"  "<< instance << "\n";
 	cout << "najlepszy wynik: " << results[0].first << "\n";
 	cout << "najgorszy wynik: " << results[n - 1].first << "\n";
-	cout << "œredni wynik: " << mean/n << "\n";
-	save_cycles_to_file("min_" + algorithm+"_" + instance, results[0].second);
-	save_cycles_to_file("max_" + algorithm + "_" + instance, results[n - 1].second);
-	save_cycles_to_file("median" + algorithm + "_" + instance, results[n / 2].second);
+	cout << "Å›redni wynik: " << mean/n << "\n";
+	save_cycles_to_file("output/min_" + algorithm+"_" + instance, results[0].second);
+	save_cycles_to_file("output/max_" + algorithm + "_" + instance, results[n - 1].second);
+	save_cycles_to_file("output/median_" + algorithm + "_" + instance, results[n / 2].second);
 }
 
 int main()
 {
 	srand(time(nullptr));
 	string instances[] = { "kroa100.tsp", "krob100.tsp" };
+	string dir = "input";
 	for (string instance : instances)
 	{
 		int n;
 		vector<vector<int>> v;
-		read_file(instance, &n, v);
+		read_file(dir + "/" + instance, &n, v);
 		vector<vector<int>> matrix(n);
 		for (int i = 0; i < matrix.size(); i++)
 		{
@@ -323,6 +287,7 @@ int main()
 		make_distance_matrix(v, matrix, n);
 		evaluation_algorithm("regret", instance, matrix, n);
 		evaluation_algorithm("cycle", instance, matrix, n);
+		evaluation_algorithm("neighbour", instance, matrix, n);
 	}
 	cout << "-----------------------------------" << "\n";
 	return 0;

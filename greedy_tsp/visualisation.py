@@ -1,4 +1,5 @@
 import argparse
+from math import ceil
 
 import matplotlib.pyplot as plt
 
@@ -7,7 +8,7 @@ RESULTS_DIR = "output"
 OUTPUT_DIR = "plots"
 
 RESULTS_FILE_PREFIXES = ("min", "max", "median")
-ALGORITHMS = ("cycle", "regret", "neighbour")
+ALGORITHMS = ("cycle", "regret", "neighbour", "regret_no_weight")
 INSTANCES = ("kroa100", "krob100")
 
 parser = argparse.ArgumentParser()

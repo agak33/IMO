@@ -38,7 +38,7 @@ void nearest_neighbour(const vector<vector<int>>& matrix, int  n, vector<vector<
 			int nearest_vertex_end = find_nearest_vertex(matrix, vertex_end, remaining);
 
 			if(matrix[vertex_begin - 1][nearest_vertex_begin - 1] <= matrix[vertex_end - 1][nearest_vertex_end - 1]){
-				add_vertex_to_cycle(nearest_vertex_begin, cycles[i], remaining);
+				add_vertex_to_cycle(nearest_vertex_begin, cycles[i], remaining, 0);
 			} else {
 				add_vertex_to_cycle(nearest_vertex_end, cycles[i], remaining);
 			}

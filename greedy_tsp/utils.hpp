@@ -55,9 +55,9 @@ int find_farthest_vertex(const vector<vector<int>>& matrix, int  n, int v, set<i
 	int max_vertex = -1;
 	for (auto it = remaining.begin(); it != remaining.end(); ++it)
 	{
-		if (matrix[*it - 1][v - 1] > max_distance)
+		if (matrix[*it][v] > max_distance)
 		{
-			max_distance = matrix[*it - 1][v - 1];
+			max_distance = matrix[*it][v];
 			max_vertex = *it;
 		}
 	}
@@ -71,9 +71,9 @@ int find_nearest_vertex(const vector<vector<int>>& matrix, int v, set<int>& rema
 	int min_vertex = -1;
 	for (auto it = remaining.begin(); it != remaining.end(); ++it)
 	{
-		if (matrix[*it - 1][v - 1] < min_distance && matrix[*it - 1][v - 1] > 0)
+		if (matrix[*it][v] < min_distance && matrix[*it][v] > 0)
 		{
-			min_distance = matrix[*it-1][v - 1];
+			min_distance = matrix[*it][v];
 			min_vertex = *it;
 		}
 	}
@@ -90,11 +90,11 @@ void add_vertex_to_cycle(int vertex, vector<int>& cycle, set<int>& remaining)
 
 void make_distance_matrix(const vector<vector<int>>& coords, vector<vector<int>>& matrix, int  n)
 {
-	for (int i = 0; i < n; i++)
+	for (int i = 1; i <= n; i++)
 	{
-		for (int j = 0; j < n; j++)
+		for (int j = 1; j <= n; j++)
 		{
-			matrix[i][j] = round(sqrt(pow(coords[i][0] - coords[j][0], 2) + pow(coords[i][1] - coords[j][1], 2)));
+			matrix[i][j] = round(sqrt(pow(coords[i-1][0] - coords[j-1][0], 2) + pow(coords[i-1][1] - coords[j-1][1], 2)));
 		}
 	}
 }

@@ -81,10 +81,14 @@ int find_nearest_vertex(const vector<vector<int>>& matrix, int v, set<int>& rema
 }
 
 
-void add_vertex_to_cycle(int vertex, vector<int>& cycle, set<int>& remaining)
+void add_vertex_to_cycle(int vertex, vector<int>& cycle, set<int>& remaining, int insert_index=-1)
 {
 	remaining.erase(vertex);
-	cycle.push_back(vertex);
+	if (insert_index == -1){
+		cycle.push_back(vertex);
+	} else {
+		cycle.insert(cycle.begin() + insert_index, vertex);
+	}
 }
 
 

@@ -38,7 +38,7 @@ void nearest_neighbour(const vector<vector<int>>& matrix, int  n, vector<vector<
 			int nearest_vertex_end = find_nearest_vertex(matrix, vertex_end, remaining);
 
 			if(matrix[vertex_begin - 1][nearest_vertex_begin - 1] <= matrix[vertex_end - 1][nearest_vertex_end - 1]){
-				add_vertex_to_cycle(nearest_vertex_begin, cycles[i], remaining);
+				add_vertex_to_cycle(nearest_vertex_begin, cycles[i], remaining, 0);
 			} else {
 				add_vertex_to_cycle(nearest_vertex_end, cycles[i], remaining);
 			}
@@ -108,7 +108,7 @@ void greedy_cycle(const vector<vector<int>>& matrix, int  n, vector<vector<int>>
 	}
 	return;
 }
-pair<int, int> regret2(const vector<vector<int>>& matrix, set<int>& remaining, vector<int>& cycle)
+pair<int, int> regret2(const vector<vector<int>>& matrix, set<int>& remaining, vector<int>& cycle, float weight=1.37)
 {
 	vector<vector<float>> regrets(remaining.size());
 	int n = cycle.size();
@@ -146,7 +146,7 @@ pair<int, int> regret2(const vector<vector<int>>& matrix, set<int>& remaining, v
 		}
 		else
 		{
-			 tmp_regret = tmp_regrets[j][1] - 1.37 *  tmp_regrets[j][0];
+			 tmp_regret = tmp_regrets[j][1] - weight *  tmp_regrets[j][0];
 		}
 
 		if (max_regret <= tmp_regret)
@@ -171,7 +171,7 @@ pair<int, int> regret2(const vector<vector<int>>& matrix, set<int>& remaining, v
 	}
 
 }
-void regrest_heuristics(const vector<vector<int>>& matrix, int  n, vector<vector<int>>& cycles, int start_vertex = -1)
+void regrest_heuristics(const vector<vector<int>>& matrix, int  n, vector<vector<int>>& cycles, int start_vertex = -1, float weight=1.37)
 {
 	set<int> remaining;
 	for (int i = 1; i <= n; i++)
@@ -209,7 +209,7 @@ void regrest_heuristics(const vector<vector<int>>& matrix, int  n, vector<vector
 		for (int i = 0; i < 2; i++)
 		{
 			int best_index, best_vertex;
-			tie(best_index, best_vertex) = regret2(matrix, remaining, cycles[i]);
+			tie(best_index, best_vertex) = regret2(matrix, remaining, cycles[i], weight);
 			cycles[i].insert(cycles[i].begin() + best_index, best_vertex);
 			remaining.erase(best_vertex);
 		}
@@ -241,6 +241,11 @@ void evaluation_algorithm(string algorithm, string instance,  const vector<vecto
 		if (algorithm == "regret")
 		{
 			regrest_heuristics(matrix, n, results[i - 1].second, i);
+
+		}
+		if (algorithm == "regret_no_weight")
+		{
+			regrest_heuristics(matrix, n, results[i - 1].second, i, 1.0);
 
 		}
 		if (algorithm == "cycle")
@@ -286,6 +291,7 @@ int main()
 		}
 		make_distance_matrix(v, matrix, n);
 		evaluation_algorithm("regret", instance, matrix, n);
+		evaluation_algorithm("regret_no_weight", instance, matrix, n);
 		evaluation_algorithm("cycle", instance, matrix, n);
 		evaluation_algorithm("neighbour", instance, matrix, n);
 	}

@@ -39,17 +39,17 @@ void read_file(string file_name, int* n, vector<vector<int>>& cords)
 void save_cycles_to_file(string file_name, vector<vector<int>>& cycles)
 {
 	ofstream File(file_name);
-	for (int i = 0; i < cycles.size(); i++)
+	for (vector<int> cycle : cycles)
 	{
-		for (int j = 0; j < cycles[i].size(); j++)
+		for (int vertex_index : cycle)
 		{
-			File << cycles[i][j] << "\n";
+			File << vertex_index + 1 << "\n";
 		}
 	}
 }
 
 
-int find_farthest_vertex(const vector<vector<int>>& matrix, int  n, int v, set<int>& remaining)
+int find_farthest_vertex(const vector<vector<int>>& matrix, int v, set<int>& remaining)
 {
 	int max_distance = -1;
 	int max_vertex = -1;
@@ -92,13 +92,24 @@ void add_vertex_to_cycle(int vertex, vector<int>& cycle, set<int>& remaining, in
 }
 
 
-void make_distance_matrix(const vector<vector<int>>& coords, vector<vector<int>>& matrix, int  n)
+void make_distance_matrix(const vector<vector<int>>& coords, vector<vector<int>>& matrix)
 {
-	for (int i = 1; i <= n; i++)
+	for (int i = 0; i < coords.size(); i++)
 	{
-		for (int j = 1; j <= n; j++)
+		for (int j = 0; j < coords.size(); j++)
 		{
-			matrix[i][j] = round(sqrt(pow(coords[i-1][0] - coords[j-1][0], 2) + pow(coords[i-1][1] - coords[j-1][1], 2)));
+			matrix[i][j] = round(sqrt(pow(coords[i][0] - coords[j][0], 2) + pow(coords[i][1] - coords[j][1], 2)));
 		}
 	}
+}
+
+int score_cycle(const vector<vector<int>>& matrix, vector<int>& cycle)
+{
+	int score = 0;
+	int n = cycle.size();
+	for (int i = 0; i < cycle.size(); i++)
+	{
+		score += matrix[cycle[i]][cycle[(i + 1) % n]];
+	}
+	return score;
 }

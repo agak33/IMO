@@ -12,18 +12,35 @@
 #include <map>
 
 #include "utils.hpp"
+#include <random>
 
 using namespace std;
 
 
-void nearest_neighbour(const vector<vector<int>>& matrix, int  n, vector<vector<int>>& cycles, int start_cycle = -1)
+void random_solution(const vector<vector<int>>& matrix, vector<vector<int>>& cycles)
+{
+	vector<int> remaining;
+	for(int i = 0; i < matrix.size(); i++) {
+		remaining.push_back(i);
+	}
+
+	auto random_number_generator = std::default_random_engine { std::random_device {}() };
+	shuffle(remaining.begin(), remaining.end(), random_number_generator);
+
+	int middle_index = ceil(remaining.size() / 2.0);
+    copy(remaining.begin(), remaining.begin() + middle_index, back_inserter(cycles[0]));
+    copy(remaining.begin() + middle_index, remaining.end(), back_inserter(cycles[1]));
+}
+
+
+void nearest_neighbour(const vector<vector<int>>& matrix, vector<vector<int>>& cycles, int start_cycle = -1)
 {
 	set<int> remaining;
-	for(int i = 1; i <= n; i++) {
+	for(int i = 0; i < matrix.size(); i++) {
 		remaining.insert(i);
 	}
-	int v1 = start_cycle == -1 ? rand() % n + 1 : start_cycle;
-	int v2 = find_farthest_vertex(matrix, n, v1, remaining);
+	int v1 = start_cycle == -1 ? rand() % matrix.size() : start_cycle;
+	int v2 = find_farthest_vertex(matrix, v1, remaining);
 
 	add_vertex_to_cycle(v1, cycles[0], remaining);
 	add_vertex_to_cycle(v2, cycles[1], remaining);
@@ -37,7 +54,7 @@ void nearest_neighbour(const vector<vector<int>>& matrix, int  n, vector<vector<
 			int nearest_vertex_begin = find_nearest_vertex(matrix, vertex_begin, remaining);
 			int nearest_vertex_end = find_nearest_vertex(matrix, vertex_end, remaining);
 
-			if(matrix[vertex_begin - 1][nearest_vertex_begin - 1] <= matrix[vertex_end - 1][nearest_vertex_end - 1]){
+			if(matrix[vertex_begin][nearest_vertex_begin] <= matrix[vertex_end][nearest_vertex_end]){
 				add_vertex_to_cycle(nearest_vertex_begin, cycles[i], remaining, 0);
 			} else {
 				add_vertex_to_cycle(nearest_vertex_end, cycles[i], remaining);
@@ -57,7 +74,7 @@ pair<int, int> score_extention_cycle(const vector<vector<int>>& matrix, vector<i
 	{
 		for (auto it = remaining.begin(); it != remaining.end(); ++it)
 		{
-			int score_diff = matrix[cycle[i] - 1][*it - 1] + matrix[*it - 1][cycle[(i + 1) % n] - 1] - matrix[cycle[i] - 1][cycle[(i + 1) % n] - 1];
+			int score_diff = matrix[cycle[i]][*it] + matrix[*it][cycle[(i + 1) % n]] - matrix[cycle[i]][cycle[(i + 1) % n]];
 			if (score_diff < min_score)
 			{
 				min_score = score_diff;
@@ -68,26 +85,27 @@ pair<int, int> score_extention_cycle(const vector<vector<int>>& matrix, vector<i
 	}
 	return { min_index, min_vertex };
 }
+
 void greedy_cycle(const vector<vector<int>>& matrix, int  n, vector<vector<int>>& cycles, int start_cycle = -1)
 {
 	int v1;
 	if (start_cycle == -1)
 	{
-		v1 = rand() % 100 + 1;
+		v1 = rand() % 100;
 	}
 	else
 	{
 		v1 = start_cycle;
 	}
 	set<int> remaining;
-	for (int i = 1; i <= n; i++)
+	for (int i = 0; i < n; i++)
 	{
 		remaining.insert(i);
 	}
 
 	remaining.erase(v1);
 	cycles[0].push_back(v1);
-	int v2 = find_farthest_vertex(matrix, n, v1, remaining);
+	int v2 = find_farthest_vertex(matrix, v1, remaining);
 	cycles[1].push_back(v2);
 	remaining.erase(v2);
 	v1 = find_nearest_vertex(matrix, cycles[0][0], remaining);
@@ -122,12 +140,12 @@ pair<int, int> regret2(const vector<vector<int>>& matrix, set<int>& remaining, v
 	{
 		for (auto it = remaining.begin(); it != remaining.end(); ++it)
 		{
-			if (m.find(*it - 1) == m.end())
+			if (m.find(*it) == m.end())
 			{
-				m[*it - 1] = cc;
+				m[*it] = cc;
 				cc++;
 			}
-			regrets[m[*it - 1]][i] = matrix[cycle[i] - 1][*it - 1] + matrix[*it - 1][cycle[(i + 1) % n] - 1] - matrix[cycle[i] - 1][cycle[(i + 1) % n] - 1];
+			regrets[m[*it]][i] = matrix[cycle[i]][*it] + matrix[*it][cycle[(i + 1) % n]] - matrix[cycle[i]][cycle[(i + 1) % n]];
 
 		}
 	}
@@ -164,7 +182,7 @@ pair<int, int> regret2(const vector<vector<int>>& matrix, set<int>& remaining, v
 			{
 				if (pair.second == best_index)
 				{
-					return { (i+1)%n, (pair.first +1) };
+					return { (i+1)%n, (pair.first) };
 				}
 			}
 		}
@@ -174,14 +192,14 @@ pair<int, int> regret2(const vector<vector<int>>& matrix, set<int>& remaining, v
 void regrest_heuristics(const vector<vector<int>>& matrix, int  n, vector<vector<int>>& cycles, int start_vertex = -1, float weight=1.37)
 {
 	set<int> remaining;
-	for (int i = 1; i <= n; i++)
+	for (int i = 0; i < n; i++)
 	{
 		remaining.insert(i);
 	}
 	int v1;
 	if (start_vertex == -1)
 	{
-		int v1 = rand() % 100 + 1;
+		int v1 = rand() % 100;
 	}
 	else
 	{
@@ -189,7 +207,7 @@ void regrest_heuristics(const vector<vector<int>>& matrix, int  n, vector<vector
 	}
 	cycles[0].push_back(v1);
 	remaining.erase(v1);
-	int v2 = find_farthest_vertex(matrix, n, v1, remaining);
+	int v2 = find_farthest_vertex(matrix, v1, remaining);
 
 	cycles[1].push_back(v2);
 	remaining.erase(v2);
@@ -217,46 +235,37 @@ void regrest_heuristics(const vector<vector<int>>& matrix, int  n, vector<vector
 	return;
 
 }
-int score_cycle(const vector<vector<int>>& matrix, vector<int>& cycle)
-{
-	int score = 0;
-	int n = cycle.size();
-	for (int i = 0; i < cycle.size(); i++)
-	{
-		score += matrix[cycle[i] - 1][cycle[(i + 1) % n] - 1];
-	}
-	return score;
-}
 
 
 void evaluation_algorithm(string algorithm, string instance,  const vector<vector<int>>& matrix, int n)
 {
-	int min_vertex=1;
-	int max_vertex=1;
 	vector < pair<int, vector<vector<int>>>> results; // vector<pair<ocena, cykle>>
-	for (int i = 1; i <= n; i++)
+	for (int i = 0; i < n; i++)
 	{
 		vector<vector<int>>cycles(2);
 		results.push_back({0, cycles});
 		if (algorithm == "regret")
 		{
-			regrest_heuristics(matrix, n, results[i - 1].second, i);
+			regrest_heuristics(matrix, n, results[i].second, i);
 
 		}
 		if (algorithm == "regret_no_weight")
 		{
-			regrest_heuristics(matrix, n, results[i - 1].second, i, 1.0);
-
+			regrest_heuristics(matrix, n, results[i].second, i, 1.0);
 		}
 		if (algorithm == "cycle")
 		{
-			greedy_cycle(matrix, n, results[i - 1].second, i);
+			greedy_cycle(matrix, n, results[i].second, i);
 		}
 		if (algorithm == "neighbour")
 		{
-			nearest_neighbour(matrix, n, results[i - 1].second, i);
+			nearest_neighbour(matrix, results[i].second, i);
 		}
-		results[i - 1].first = score_cycle(matrix, results[i - 1].second[0]) + score_cycle(matrix, results[i - 1].second[1]);
+		if (algorithm == "random")
+		{
+			random_solution(matrix, results[i].second);
+		}
+		results[i].first = score_cycle(matrix, results[i].second[0]) + score_cycle(matrix, results[i].second[1]);
 	}
 	sort(results.begin(), results.end());
 	int mean = 0;
@@ -289,11 +298,13 @@ int main()
 		{
 			matrix[i] = vector<int>(n);
 		}
-		make_distance_matrix(v, matrix, n);
+		make_distance_matrix(v, matrix);
+
 		evaluation_algorithm("regret", instance, matrix, n);
 		evaluation_algorithm("regret_no_weight", instance, matrix, n);
 		evaluation_algorithm("cycle", instance, matrix, n);
 		evaluation_algorithm("neighbour", instance, matrix, n);
+		evaluation_algorithm("random", instance, matrix, n);
 	}
 	cout << "-----------------------------------" << "\n";
 	return 0;

@@ -24,7 +24,7 @@ int delta_swap_edges(vector<vector<int>> & matrix,vector<int> cycle, int i, int 
     if(min(i,j) == 0 && max(i,j) == n-1)
     {
         a = cycle[i];
-		b = cycle[(i+1)%n]
+		b = cycle[(i+1)%n];
 		c = cycle[(j-1)%n];
 		d = cycle[j];
     }

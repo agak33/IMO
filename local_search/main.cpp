@@ -7,7 +7,37 @@ string INPUT_DIR_CYCLES = "../greedy_tsp/output";
 string RESULT_PREFIX = "min";
 string ALGORITHMS[] = { "random", "regret_no_weight" };
 
+void swap_edges(vector<int> cycle, int i, int j) // `i` i `j` to indeksy wierzchołków w cyklu które rozpoczynają krawędź
+{
+    int n =cycle.size();
+    if(min(i,j) == 0 && max(i,j) == n-1)
+    {
+        swap(cycle[i], cycle[j]);
+    }
+    reverse(cycle.begin() + i, cycle.begin() + (j+1)%n);
+}
 
+int delta_swap_edges(vector<vector<int>> & matrix,vector<int> cycle, int i, int j)// `i` i `j` to indeksy wierzchołków w cyklu które rozpoczynają krawędź
+{
+    int n = cycle.size();
+    int a,b,c,d;
+    if(min(i,j) == 0 && max(i,j) == n-1)
+    {
+        a = cycle[i];
+		b = cycle[(i+1)%n]
+		c = cycle[(j-1)%n];
+		d = cycle[j];
+    }
+    else
+    {
+        a = cycle[(j-1)%n];
+		b = cycle[i];
+		c = cycle[j];
+		d = cycle[(i+1)%n];
+    }
+    return matrix[a][c]+matrix[b][d] - matrix[a][b]-matrix[c][d];
+
+}   
 void swap_vertexes(vector<vector<int>> cycles) {
     /*
     A function to swap vertices between cycles.

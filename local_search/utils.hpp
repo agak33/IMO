@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <cmath>
-
+#include <algorithm>
 using namespace std;
 
 void read_file(string path, vector<vector<int>>& cycles) {

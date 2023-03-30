@@ -7,7 +7,7 @@ string INPUT_DIR_CYCLES = "../greedy_tsp/output";
 string RESULT_PREFIX = "min";
 string ALGORITHMS[] = { "random", "regret_no_weight" };
 
-void swap_edges(vector<int> cycle, int i, int j) // `i` i `j` to indeksy wierzchołków w cyklu które rozpoczynają krawędź
+void swap_edges(vector<int>& cycle, int i, int j) // `i` i `j` to indeksy wierzchołków w cyklu które rozpoczynają krawędź
 {
     int n =cycle.size();
     if(min(i,j) == 0 && max(i,j) == n-1)
@@ -17,7 +17,7 @@ void swap_edges(vector<int> cycle, int i, int j) // `i` i `j` to indeksy wierzch
     reverse(cycle.begin() + i, cycle.begin() + (j+1)%n);
 }
 
-int delta_swap_edges(vector<vector<int>> & matrix,vector<int> cycle, int i, int j)// `i` i `j` to indeksy wierzchołków w cyklu które rozpoczynają krawędź
+int delta_swap_edges(const vector<vector<int>> & matrix,vector<int> cycle, int i, int j)// `i` i `j` to indeksy wierzchołków w cyklu które rozpoczynają krawędź
 {
     int n = cycle.size();
     int a,b,c,d;
@@ -25,30 +25,76 @@ int delta_swap_edges(vector<vector<int>> & matrix,vector<int> cycle, int i, int 
     {
         a = cycle[i];
 		b = cycle[(i+1)%n];
-		c = cycle[(j-1)%n];
+		c = cycle[(j-1+n)%n];
 		d = cycle[j];
     }
     else
     {
-        a = cycle[(j-1)%n];
+        a = cycle[(i-1+n)%n];
 		b = cycle[i];
 		c = cycle[j];
-		d = cycle[(i+1)%n];
+		d = cycle[(j+1)%n];
     }
-    return matrix[a][c]+matrix[b][d] - matrix[a][b]-matrix[c][d];
-
+    return matrix[a][c] + matrix[b][d] - matrix[a][b]-matrix[c][d];
 }   
-void swap_vertexes(vector<vector<int>> cycles) {
+
+
+bool move_swap_edges(const vector<vector<int>> & matrix,vector<int>& cycle, bool steepest)
+{
+    std::default_random_engine rng(std::random_device{}());
+    int n = cycle.size();
+    vector<vector<int>>moves_edge_swap;
+    for(int i=0; i<n-1; i++)
+    {
+        for(int j=i+1; j<n-1; j++)
+        {
+            moves_edge_swap.push_back({i,j});
+        }
+    }
+    std::shuffle(moves_edge_swap.begin(), moves_edge_swap.end(), rng); // posorotwane ruchy
+    vector<int> best_edges = {-1,-1};
+    int best_value = 1e9;
+    for(vector<int> v : moves_edge_swap)
+    {
+        int delta = delta_swap_edges(matrix, cycle,v[0], v[1]);
+        if( delta < 0)
+        {
+            if (steepest == false)
+            {
+                swap_edges(cycle, v[0], v[1]);
+                return true;
+            }
+            else
+            {
+                if(best_value > delta)
+                {
+                    best_value = delta;
+                    best_edges[0] = v[0];
+                    best_edges[1] = v[1];
+                }
+            }
+        }
+    }
+    if(best_value < 0)
+    {
+        swap_edges(cycle, best_edges[0], best_edges[1]);
+        return true;
+    }
+    return false;
+}
+bool swap_vertexes(vector<vector<int>> cycles, bool steepest ) {
     /*
     A function to swap vertices between cycles.
     */
+   return false;
 
 }
 
-void swap_vertexes(vector<int> cycle) {
+bool swap_vertexes(vector<int> cycle, bool steepest) {
     /*
     A function to swap vertices inside the cycle.
     */
+   return false;
 }
 
 void find_best_move(vector<vector<int>> cycles) {
@@ -89,6 +135,92 @@ int steepest_local_search(
     return solution_delta;
 }
 
+void greedy_local_search(
+    vector<vector<int>>& solution,
+    const vector<vector<int>>& matrix,
+    const bool flag_swap_edges
+)
+{
+    
+    while(true)
+    {
+        bool flag_end = true;
+        int cycle_index = rand()%2; // od którego cylu zaczniemy
+        int edges_or_vertex = rand()%2; //zaczynbamy od zamiany krawędzi albo wierzchołków
+        int outside_insde = rand()%2;
+        if(flag_swap_edges == true) // mamy zamianę krawędzi
+        {
+            if(edges_or_vertex == true)
+            {
+                bool flag_change = move_swap_edges(matrix, solution[cycle_index],false);
+                if(flag_change == false)
+                {
+                    flag_change = move_swap_edges(matrix, solution[1-cycle_index],false);
+                }
+                if(flag_change == false)
+                {
+                    bool flag_change = swap_vertexes(solution, false);
+                }
+                if(flag_change == false)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                bool flag_change = swap_vertexes(solution, false);
+                if(flag_change == false)
+                {
+                    flag_change = move_swap_edges(matrix, solution[cycle_index],false);
+                }
+                if(flag_change == false)
+                {
+                    bool flag_change = move_swap_edges(matrix, solution[1-cycle_index],false);
+                }
+                if(flag_change == false)
+                {
+                    return;
+                }
+            }
+        }
+        else
+        {
+            if(edges_or_vertex == true)
+            {
+                bool flag_change = swap_vertexes( solution[cycle_index],false);
+                if(flag_change == false)
+                {
+                    flag_change = swap_vertexes(solution[1-cycle_index],false);
+                }
+                if(flag_change == false)
+                {
+                    bool flag_change = swap_vertexes(solution, false);
+                }
+                if(flag_change == false) // nie można wykonać żadnego ruchu poprawiającego wynik
+                {
+                    return;
+                }
+            }
+            else
+            {
+                bool flag_change = swap_vertexes(solution, false);
+                if(flag_change == false)
+                {
+                    flag_change = swap_vertexes(solution[cycle_index],false);
+                }
+                if(flag_change == false)
+                {
+                   flag_change = swap_vertexes(solution[1-cycle_index],false);
+                }
+                if(flag_change == false) // nie można wykonać żadnego ruchu poprawiającego wynik
+                {
+                    return;
+                }
+            }
+        }
+    }
+}
+
 
 void evaluation_algorithm(
     const string& algorithm,
@@ -105,7 +237,10 @@ void evaluation_algorithm(
 
         if (algorithm == "greedy")
         {
-            //TODO
+            //cout<<score_cycle(matrix,cycles_to_modify[0])+score_cycle(matrix,cycles_to_modify[1])<<"<-  wejście \n";
+            greedy_local_search(cycles_to_modify, matrix, true);
+            //cout<<score_cycle(matrix,cycles_to_modify[0])+score_cycle(matrix,cycles_to_modify[1])<<"<-wyjście \n";
+
         }
         else if (algorithm == "steepest")
         {
@@ -118,16 +253,15 @@ void evaluation_algorithm(
 
 int main() {
     srand(time(nullptr));
-
     for (string instance : INSTANCES)
 	{
 		int n;
 		vector<vector<int>> v;
 		read_file(INPUT_DIR + "/" + instance, &n, v);
-		vector<vector<int>> matrix(n);
+		vector<vector<int>> matrix(n+1);
 		for (int i = 0; i < matrix.size(); i++)
 		{
-			matrix[i] = vector<int>(n);
+			matrix[i] = vector<int>(n+1);
 		}
 		make_distance_matrix(v, matrix);
 

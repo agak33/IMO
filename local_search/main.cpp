@@ -439,6 +439,45 @@ int greedy_local_search(
     }
 }
 
+int random_walk(vector<vector<int>>& solution,
+    const vector<vector<int>>& matrix,
+    int time_ms
+) {
+    int result = 0;
+    int v1, v2;
+    auto start_time = chrono::high_resolution_clock::now();
+
+    while(chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - start_time).count() < time_ms) {
+        int outside = rand() % 2;
+
+        if (outside) { // wykonujemy ruch między cyklami (zamiana wierzchołków)
+            v1 = rand() % solution[0].size();
+            v2 = rand() % solution[1].size();
+
+            result += delta_swap_vertexes(matrix, solution, v1, v2);
+            swap_vertexes(solution, v1, v2);
+        } else {
+            int edges = rand() % 2;
+            int cycle = rand() % 2;
+
+            v1 = rand() % solution[cycle].size();
+            do {
+                v2 = rand() % solution[cycle].size();
+            } while(v1 == v2);
+
+            if (edges) { // zamiana krawędzi
+                result += delta_swap_edges(matrix, solution[cycle], v1, v2);
+                swap_edges(solution[cycle], v1, v2);
+            } else {
+                result += delta_swap_vertexes(matrix, solution[cycle], v1, v2);
+                swap_vertexes(solution[cycle], v1, v2);
+            }
+        }
+    }
+
+    return result;
+}
+
 
 class Result {
     public:
@@ -473,7 +512,8 @@ void evaluation_algorithm(
     const string& cycle_algo,
     const vector<vector<int>>& matrix,
     const bool swap_edges=false, // if set to ``true``, then the algorithm should swap the edges instead of vertices inside the cycle
-    int n=100
+    int n=100,
+    int max_time_ms=175 // for random walk
 )
 {
     vector<Result> results(n); // wszystkie wyniki
@@ -502,6 +542,10 @@ void evaluation_algorithm(
         else if (algorithm == "steepest")
         {
             d = steepest_local_search(results[i].solution, matrix, swap_edges);
+        }
+        else if(algorithm == "random walk")
+        {
+            d = random_walk(results[i].solution, matrix, max_time_ms);
         }
         auto stop = chrono::high_resolution_clock::now();
 
@@ -561,11 +605,12 @@ int main() {
 
         for(string cycle_algo : ALGORITHMS)
         {
-            evaluation_algorithm("greedy", instance, cycle_algo, matrix);
-            evaluation_algorithm("greedy", instance, cycle_algo, matrix, true);
+            evaluation_algorithm("random walk", instance, cycle_algo, matrix);
+            // evaluation_algorithm("greedy", instance, cycle_algo, matrix);
+            // evaluation_algorithm("greedy", instance, cycle_algo, matrix, true);
 
-            evaluation_algorithm("steepest", instance, cycle_algo, matrix);
-            evaluation_algorithm("steepest", instance, cycle_algo, matrix, true);
+            // evaluation_algorithm("steepest", instance, cycle_algo, matrix);
+            // evaluation_algorithm("steepest", instance, cycle_algo, matrix, true);
             cout << "-----------------------------------" << "\n";
         }
 	}

@@ -18,7 +18,7 @@ void swap_edges(vector<int>& cycle, int i, int j) // `i` i `j` to indeksy wierzc
     {
         swap(cycle[i], cycle[j]);
     }
-    reverse(cycle.begin() + i, cycle.begin() + (j+1)%n);
+    reverse(cycle.begin() + i + 1, cycle.begin() + j);
 }
 
 void swap_vertexes(vector<vector<int>>& cycles, int i, int j) {
@@ -513,7 +513,7 @@ void evaluation_algorithm(
     const vector<vector<int>>& matrix,
     const bool swap_edges=false, // if set to ``true``, then the algorithm should swap the edges instead of vertices inside the cycle
     int n=100,
-    int max_time_ms=175 // for random walk
+    int max_time_ms=184 // for random walk
 )
 {
     vector<Result> results(n); // wszystkie wyniki
@@ -528,7 +528,7 @@ void evaluation_algorithm(
         }
 
         // krok 2 - zapisz wynik
-        results[i].compute_score(matrix);
+        // results[i].compute_score(matrix);
 
         // krok 3 - zmodyfikuj rozwiązanie, zapisz deltę i czas
         int d = 0;
@@ -551,7 +551,7 @@ void evaluation_algorithm(
 
         results[i].time = chrono::duration_cast<chrono::milliseconds>(stop - start).count();
         results[i].delta = d;
-        results[i].score += d;
+        results[i].compute_score(matrix);
 
         // cout << i << " INSTANCE: " << instance_name << "; ALGO: " << algorithm << "; CYCLE ALGO: " << cycle_algo << endl;
         // cout << "DELTA: " << d << "; SCORE: " << results[i].score << "; TIME: " << results[i].time << endl;
@@ -605,15 +605,18 @@ int main() {
 
         for(string cycle_algo : ALGORITHMS)
         {
-            evaluation_algorithm("random walk", instance, cycle_algo, matrix);
-            // evaluation_algorithm("greedy", instance, cycle_algo, matrix);
-            // evaluation_algorithm("greedy", instance, cycle_algo, matrix, true);
+            evaluation_algorithm("greedy", instance, cycle_algo, matrix);
+            evaluation_algorithm("greedy", instance, cycle_algo, matrix, true);
 
-            // evaluation_algorithm("steepest", instance, cycle_algo, matrix);
-            // evaluation_algorithm("steepest", instance, cycle_algo, matrix, true);
+            evaluation_algorithm("steepest", instance, cycle_algo, matrix);
+            evaluation_algorithm("steepest", instance, cycle_algo, matrix, true);
             cout << "-----------------------------------" << "\n";
         }
-	}
+        evaluation_algorithm("random walk", "kroa100.tsp", "random", matrix, NULL, 100, 201);
+        evaluation_algorithm("random walk", "krob100.tsp", "random", matrix, NULL, 100, 184);
 
+        evaluation_algorithm("random walk", "kroa100.tsp", "regret", matrix, NULL, 100, 17);
+        evaluation_algorithm("random walk", "krob100.tsp", "regret", matrix, NULL, 100, 19);
+	}
 
 }

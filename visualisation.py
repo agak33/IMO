@@ -14,14 +14,17 @@ parser.add_argument(
     "-n", "--cycles-number", type=int, help="Number of separable cycles.", default=2
 )
 
-INSTANCES = ("kroa100.tsp", "krob100.tsp")
+instances = []
 
 args = parser.parse_args()
 
 if __name__ == "__main__":
+    for instance_name in glob.glob(f"{args.file_dir}/*"):
+        instances.append(os.path.split(instance_name)[-1])
+
     for input_file in glob.glob(f"{args.input_dir}/*"):
         output_filename = os.path.split(input_file)[-1]
-        instance_filename = INSTANCES[0] if INSTANCES[0] in output_filename else INSTANCES[1]
+        instance_filename = [x for x in instances if x in output_filename][0]
 
         x, y = [], []
         cycles = []

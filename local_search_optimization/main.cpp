@@ -6,8 +6,8 @@ using namespace std;
 
 string INPUT_DIR = "./input";
 string INSTANCES[] = { "kroA200.tsp", "kroB200.tsp" };
-// string ALGORITHMS[] = { "regret", "steepest", "evaluation memory", "candidates" };
-string ALGORITHMS[] = { "regret", "steepest", "evaluation memory" };
+string ALGORITHMS[] = { "regret", "steepest", "evaluation memory", "candidates" };
+// string ALGORITHMS[] = { "regret", "steepest", "evaluation memory" };
 string OUTPUT_DIR = "output";
 
 enum applicable {
@@ -495,10 +495,10 @@ int main() {
 			matrix[i] = vector<int>(n);
 		}
 		make_distance_matrix(v, matrix);
-    
+
         for(string algorithm : ALGORITHMS)
         {
-            evaluation_algorithm(algorithm, instance, matrix, 5);
+            evaluation_algorithm(algorithm, instance, matrix);
             cout << "-----------------------------------" << "\n";
         }
     }

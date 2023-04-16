@@ -4,6 +4,7 @@
 #include <set>
 #include <map>
 #include <random>
+#include <numeric>
 
 #include "utils.hpp"
 
@@ -11,139 +12,144 @@ using namespace std;
 
 void random_solution(const vector<vector<int>>& matrix, vector<vector<int>>& cycles)
 {
-	vector<int> remaining;
+    vector<int> remaining;
 	for(int i = 0; i < matrix.size(); i++) {
-		remaining.push_back(i);
-	}
+        remaining.push_back(i);
+    }
 
 	auto random_number_generator = std::default_random_engine { std::random_device {}() };
-	shuffle(remaining.begin(), remaining.end(), random_number_generator);
+    shuffle(remaining.begin(), remaining.end(), random_number_generator);
 
-	int middle_index = ceil(remaining.size() / 2.0);
+    int middle_index = ceil(remaining.size() / 2.0);
     copy(remaining.begin(), remaining.begin() + middle_index, back_inserter(cycles[0]));
     copy(remaining.begin() + middle_index, remaining.end(), back_inserter(cycles[1]));
 }
 
 pair<int, int> regret2(const vector<vector<int>>& matrix, set<int>& remaining, vector<int>& cycle, float weight=1.37)
 {
-	vector<vector<float>> regrets(remaining.size());
-	int n = cycle.size();
-	for (int i = 0; i < remaining.size(); i++)
-	{
-		regrets[i].resize(n);
-	}
+    vector<vector<float>> regrets(remaining.size());
+    int n = cycle.size();
+    for (int i = 0; i < remaining.size(); i++)
+    {
+        regrets[i].resize(n);
+    }
 	map<int, int>m;
-	int cc = 0;
-	for (int i = 0; i < n; i++)
-	{
-		for (auto it = remaining.begin(); it != remaining.end(); ++it)
-		{
-			if (m.find(*it) == m.end())
-			{
-				m[*it] = cc;
-				cc++;
-			}
-			regrets[m[*it]][i] = matrix[cycle[i]][*it] + matrix[*it][cycle[(i + 1) % n]] - matrix[cycle[i]][cycle[(i + 1) % n]];
+    int cc = 0;
+    for (int i = 0; i < n; i++)
+    {
+        for (auto it = remaining.begin(); it != remaining.end(); ++it)
+        {
+            if (m.find(*it) == m.end())
+            {
+                m[*it] = cc;
+                cc++;
+            }
+            regrets[m[*it]][i] = matrix[cycle[i]][*it] + matrix[*it][cycle[(i + 1) % n]] - matrix[cycle[i]][cycle[(i + 1) % n]];
 
-		}
-	}
-	vector<vector<float>> tmp_regrets;
-	copy(regrets.begin(), regrets.end(), back_inserter(tmp_regrets));
-	float max_regret = -1e9;
-	int best_index = -1;
-	float tmp_regret_min = 0;
-	for (int j = 0; j < tmp_regrets.size(); j++)
-	{
-		sort(tmp_regrets[j].begin(), tmp_regrets[j].end());
-		float tmp_regret;
-		if (tmp_regrets[j].size() <= 1)
-		{
+        }
+    }
+    vector<vector<float>> tmp_regrets;
+    copy(regrets.begin(), regrets.end(), back_inserter(tmp_regrets));
+    float max_regret = -1e9;
+    int best_index = -1;
+    float tmp_regret_min = 0;
+    for (int j = 0; j < tmp_regrets.size(); j++)
+    {
+        sort(tmp_regrets[j].begin(), tmp_regrets[j].end());
+        float tmp_regret;
+        if (tmp_regrets[j].size() <= 1)
+        {
 			 tmp_regret =  tmp_regrets[j][0];
-		}
-		else
-		{
+        }
+        else
+        {
 			 tmp_regret = tmp_regrets[j][1] - weight *  tmp_regrets[j][0];
-		}
+        }
 
-		if (max_regret <= tmp_regret)
-		{
-			max_regret = tmp_regret;
-			best_index = j;
-			tmp_regret_min = tmp_regrets[j][0];
-		}
-	}
+        if (max_regret <= tmp_regret)
+        {
+            max_regret = tmp_regret;
+            best_index = j;
+            tmp_regret_min = tmp_regrets[j][0];
+        }
+    }
 	for(int i =0;i<n; i++)
-	{
-		if (regrets[best_index][i] == tmp_regret_min)
-		{
+    {
+        if (regrets[best_index][i] == tmp_regret_min)
+        {
 			for (const auto& pair : m)
-			{
-				if (pair.second == best_index)
-				{
+            {
+                if (pair.second == best_index)
+                {
 					return { (i+1)%n, (pair.first) };
-				}
-			}
-		}
-	}
+                }
+            }
+        }
+    }
 
 }
 void regrest_heuristics(const vector<vector<int>>& matrix, vector<vector<int>>& cycles, int start_vertex = -1, float weight=1.37)
 {
-	set<int> remaining;
+    set<int> remaining;
     int n = matrix.size();
-	for (int i = 0; i < n; i++)
-	{
-		remaining.insert(i);
-	}
-	int v1;
-	if (start_vertex == -1)
-	{
-		v1 = rand() % n;
-	}
-	else
-	{
-		v1 = start_vertex;
-	}
+    for (int i = 0; i < n; i++)
+    {
+        remaining.insert(i);
+    }
+    int v1;
+    if (start_vertex == -1)
+    {
+        v1 = rand() % n;
+    }
+    else
+    {
+        v1 = start_vertex;
+    }
 
-	cycles[0].push_back(v1);
-	remaining.erase(v1);
-	int v2 = find_farthest_vertex(matrix, v1, remaining);
+    cycles[0].push_back(v1);
+    remaining.erase(v1);
+    int v2 = find_farthest_vertex(matrix, v1, remaining);
 
-	cycles[1].push_back(v2);
-	remaining.erase(v2);
+    cycles[1].push_back(v2);
+    remaining.erase(v2);
 
-	int licznik = 0;
+    int licznik = 0;
 
-	v1 = find_nearest_vertex(matrix, v1, remaining);
-	cycles[0].push_back(v1);
-	remaining.erase(v1);
+    v1 = find_nearest_vertex(matrix, v1, remaining);
+    cycles[0].push_back(v1);
+    remaining.erase(v1);
 
-	v2 = find_nearest_vertex(matrix, v2, remaining);
-	cycles[1].push_back(v2);
-	remaining.erase(v2);
+    v2 = find_nearest_vertex(matrix, v2, remaining);
+    cycles[1].push_back(v2);
+    remaining.erase(v2);
 
-	while (!remaining.empty())
-	{
-		for (int i = 0; i < 2; i++)
-		{
-			int best_index, best_vertex;
-			tie(best_index, best_vertex) = regret2(matrix, remaining, cycles[i], weight);
-			cycles[i].insert(cycles[i].begin() + best_index, best_vertex);
-			remaining.erase(best_vertex);
-		}
-	}
-	return;
+    while (!remaining.empty())
+    {
+        for (int i = 0; i < 2; i++)
+        {
+            int best_index, best_vertex;
+            tie(best_index, best_vertex) = regret2(matrix, remaining, cycles[i], weight);
+            cycles[i].insert(cycles[i].begin() + best_index, best_vertex);
+            remaining.erase(best_vertex);
+        }
+    }
+    return;
 
 }
 
-void swap_edges(vector<int>& cycle, int i, int j) // `i` i `j` to indeksy wierzchołków w cyklu które rozpoczynają krawędź
+void swap_edges(vector<int> &cycle, int i, int j) // `i` i `j` to indeksy wierzchołków w cyklu które rozpoczynają krawędź
 {
+    int ii = min(i, j);
+    int jj = max(i, j);
     int n = cycle.size();
-    if(min(i,j) == 0 && max(i,j) == n-1)
+    ii = (ii+1)%n;
+    int d = (abs(jj-ii)+n)%n;
+    for(int k=0;k<(d/2) +1; k++)
     {
-        swap(cycle[i], cycle[j]);
+        int a =(ii+k)%n;
+        int b = (ii+d-k+n)%n;
+        swap(cycle[a], cycle[b]);
     }
-    reverse(cycle.begin() + i, cycle.begin() + (j+1)%n);
 }
 
 void swap_vertexes(vector<vector<int>>& cycles, int i, int j) {
@@ -169,22 +175,12 @@ void swap_vertexes(vector<int>& cycle, int i, int j) {
 int delta_swap_edges(const vector<vector<int>> & matrix,const vector<int>& cycle, int i, int j)// `i` i `j` to indeksy wierzchołków w cyklu które rozpoczynają krawędź
 {
     int n = cycle.size();
-    int a,b,c,d;
-    if(min(i,j) == 0 && max(i,j) == n-1)
-    {
-        a = cycle[i];
-		b = cycle[(i+1)%n];
-		c = cycle[(j-1+n)%n];
-		d = cycle[j];
-    }
-    else
-    {
-        a = cycle[(i-1+n)%n];
-		b = cycle[i];
-		c = cycle[j];
-		d = cycle[(j+1)%n];
-    }
-    return matrix[a][c] + matrix[b][d] - matrix[a][b]-matrix[c][d];
+    int a, b, c, d;
+    a = cycle[i];
+    b = cycle[(i+1)%n];
+    c = cycle[j%n];
+    d = cycle[(j+1)%n];
+    return matrix[a][c] + matrix[b][d] - matrix[a][b] - matrix[c][d];
 }
 
 int delta_swap_vertexes(const vector<vector<int>>& matrix, vector<vector<int>> cycles, int i, int j) {
@@ -426,7 +422,7 @@ int steepest_local_search(
 
         min_curr_delta = min({
             curr_delta_type1,
-            curr_delta1_type2,
+                              curr_delta1_type2,
             curr_delta2_type2
         });
 
@@ -451,3 +447,132 @@ int steepest_local_search(
 
     return solution_delta;
 }
+
+void make_candidate_matrix(const vector<vector<int>> &matrix, vector<vector<int>> &candidate_matrix, int n = 10)
+{
+    for (int i = 0; i < candidate_matrix.size(); i++)
+    {
+        vector<pair<int, int>> indexed_vec(matrix[i].size());
+        for (int j = 0; j < matrix[i].size(); j++)
+        {
+            indexed_vec[j] = make_pair(matrix[i][j], j);
+        }
+        indexed_vec[i].first = 1e9; // nie bierzemy pod uwagę krawędzi do siebie
+        sort(indexed_vec.begin(), indexed_vec.end());
+        for (int j = 0; j < n; j++)
+        {
+            candidate_matrix[i].push_back(indexed_vec[j].second);
+        }
+    }
+}
+
+int find_vertex(const vector<vector<int>> &solution, int v)
+{
+    if(find(solution[0].begin(), solution[0].end(),v) != solution[0].end())
+    {
+        return 0;
+    }
+    return 1;
+}
+
+int find_index(const vector<int> solution, int v)
+{
+    for(int i=0;i<solution.size(); i++)
+    {
+        if(solution[i] == v)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void candidates_algorithm( vector<vector<int>> &solution,const vector<vector<int>> &matrix, int k=10)
+{
+    vector<vector<int>> candidates(matrix.size());
+    make_candidate_matrix(matrix, candidates, k);
+    while(true)
+    {
+      //  cout<<score_cycle(matrix,solution[0])+score_cycle(matrix,solution[1])<<"\n";
+        pair<int,int> best_move; //zawiera krawędź pomiędzy dwoma wierzchołkami którą chcemy dodać
+        int delta_best_move = 1e9; //ocena najlepszego ruchu
+        int type_best_move = -1;
+        int n = solution[0].size();
+        int best_cycle = -1;
+        for(int i=0;i < candidates.size(); i++)
+        {
+            for(int j=0; j<candidates[i].size(); j++)
+            {
+                // dla każdej krawędzi kandydackiej będziemy próbowali ją dodać
+                int c1 = find_vertex(solution,i);
+                int c2 = find_vertex(solution, candidates[i][j]);
+                int v1 = i;
+                int v2 = candidates[i][j];
+                if (c1 == c2)
+                {
+                    // wierzchołki są w tym samym cyklu, robimy zamianę krawędzi
+                    //znajdumy indeksy wierzhcołków w cyklu
+                    int index_1 = find_index(solution[c1], v1);
+                    int index_2 = find_index(solution[c2], v2);
+                    int local_delta = delta_swap_edges(matrix, solution[c1], index_1, index_2);
+                    if(local_delta < delta_best_move)
+                    {
+                        delta_best_move = local_delta;
+                        best_move = make_pair(index_1, index_2);
+                        type_best_move = 1;
+                        best_cycle = c1;
+                    }
+                   local_delta = delta_swap_edges(matrix, solution[c1], (index_1 - 1 + n) % n, (index_2 - 1 + n) % n);
+                    if(local_delta < delta_best_move)
+                    {
+                        delta_best_move = local_delta;
+                        best_move = make_pair((index_1-1+n)%n, (index_2-1+n)%n);
+                        type_best_move = 1;
+                        best_cycle = c1;
+                    }
+                }
+                else
+                {
+                    //wierzchołki są w różnych cyklach, robię zamianę wierzchołków wprowadzając
+                    //naszą krawędź
+                    int index_1 = find_index(solution[c1], v1);
+                    int index_2 = find_index(solution[c2], v2);
+                    if(c2 > c1)
+                    {
+                        swap(index_1, index_2);
+                    }
+                    vector<pair<int,pair<int,int>>> deltas; // wektor par <ocena, ruch>
+                    deltas.push_back({delta_swap_vertexes(matrix,solution,(index_1+1)%n, index_2), {(index_1+1)%n, index_2}});
+                    deltas.push_back({delta_swap_vertexes(matrix,solution,index_1,(index_2-1+n)%n ), {index_1,(index_2-1+n)%n}});
+                    deltas.push_back({delta_swap_vertexes(matrix,solution,(index_1+1)%n, index_2), {(index_1+1)%n, index_2}});
+                    deltas.push_back({delta_swap_vertexes(matrix,solution,index_1, (index_2-1+n)%n), {index_1, (index_2-1+n)%n}});
+                    sort(deltas.begin(), deltas.end());
+                    if(deltas[0].first < delta_best_move)
+                    {
+                        delta_best_move = deltas[0].first;
+                        best_move = deltas[0].second;
+                        type_best_move = 2;
+                    }
+                }
+            }
+        }
+        if(type_best_move > 0 && delta_best_move < 0)
+        {
+            if(type_best_move == 1)
+            {
+                swap_edges(solution[best_cycle], best_move.first, best_move.second);
+            }
+            else
+            {
+                swap_vertexes(solution, best_move.first, best_move.second);
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+    return;
+}
+
+

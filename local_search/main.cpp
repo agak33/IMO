@@ -18,7 +18,7 @@ void swap_edges(vector<int>& cycle, int i, int j) // `i` i `j` to indeksy wierzc
     {
         swap(cycle[i], cycle[j]);
     }
-    reverse(cycle.begin() + i, cycle.begin() + (j+1)%n);
+    reverse(cycle.begin() + i + 1, cycle.begin() + j);
 }
 
 void swap_vertexes(vector<vector<int>>& cycles, int i, int j) {

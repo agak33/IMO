@@ -166,7 +166,7 @@ void swap_vertexes(vector<int>& cycle, int i, int j) {
     swap(cycle[i], cycle[j]);
 }
 
-int delta_swap_edges(const vector<vector<int>> & matrix,vector<int> cycle, int i, int j)// `i` i `j` to indeksy wierzchołków w cyklu które rozpoczynają krawędź
+int delta_swap_edges(const vector<vector<int>> & matrix,const vector<int>& cycle, int i, int j)// `i` i `j` to indeksy wierzchołków w cyklu które rozpoczynają krawędź
 {
     int n = cycle.size();
     int a,b,c,d;

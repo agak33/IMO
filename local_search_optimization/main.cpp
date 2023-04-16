@@ -66,7 +66,7 @@ void evaluation_algorithm(
         }
         else if(algorithm == "candidates")
         {
-            // TODO
+            candidates_algorithm(results[i].solution, matrix);
         }
         auto stop = chrono::high_resolution_clock::now();
 
@@ -121,12 +121,12 @@ int main() {
 			matrix[i] = vector<int>(n);
 		}
 		make_distance_matrix(v, matrix);
-
+    
         for(string algorithm : ALGORITHMS)
         {
             evaluation_algorithm(algorithm, instance, matrix, 5);
             cout << "-----------------------------------" << "\n";
         }
-	}
+    }
 
 }

@@ -5,6 +5,7 @@
 #include <map>
 #include <random>
 #include <numeric>
+#include<cassert>
 
 #include "utils.hpp"
 
@@ -499,6 +500,7 @@ void candidates_algorithm( vector<vector<int>> &solution,const vector<vector<int
         int type_best_move = -1;
         int n = solution[0].size();
         int best_cycle = -1;
+        pair<int, int> tmp_v = { -1,-1 };
         for(int i=0;i < candidates.size(); i++)
         {
             for(int j=0; j<candidates[i].size(); j++)
@@ -537,34 +539,56 @@ void candidates_algorithm( vector<vector<int>> &solution,const vector<vector<int
                     //naszą krawędź
                     int index_1 = find_index(solution[c1], v1);
                     int index_2 = find_index(solution[c2], v2);
-                    if(c2 > c1)
+                    vector<pair<int, pair<int, int>>> deltas;
+                    if (c1 == 0)
                     {
-                        swap(index_1, index_2);
+                        // wektor par <ocena, ruch>
+                        deltas.push_back({ delta_swap_vertexes(matrix,solution,(index_1 + 1) % n, index_2), {(index_1 + 1) % n, index_2} });
+                        deltas.push_back({ delta_swap_vertexes(matrix,solution,index_1,(index_2 - 1 + n) % n), {index_1,(index_2 - 1 + n) % n} });
                     }
-                    vector<pair<int,pair<int,int>>> deltas; // wektor par <ocena, ruch>
-                    deltas.push_back({delta_swap_vertexes(matrix,solution,(index_1+1)%n, index_2), {(index_1+1)%n, index_2}});
-                    deltas.push_back({delta_swap_vertexes(matrix,solution,index_1,(index_2-1+n)%n ), {index_1,(index_2-1+n)%n}});
-                    deltas.push_back({delta_swap_vertexes(matrix,solution,(index_1+1)%n, index_2), {(index_1+1)%n, index_2}});
-                    deltas.push_back({delta_swap_vertexes(matrix,solution,index_1, (index_2-1+n)%n), {index_1, (index_2-1+n)%n}});
+                    else
+                    {
+                        deltas.push_back({ delta_swap_vertexes(matrix,solution,(index_2 - 1+n) % n, index_1), {(index_2 - 1 + n) % n, index_1} });
+                        deltas.push_back({ delta_swap_vertexes(matrix,solution,index_2,(index_1 + 1 + n) % n), {index_2,(index_1 + 1 + n) % n } });
+                    }
                     sort(deltas.begin(), deltas.end());
                     if(deltas[0].first < delta_best_move)
                     {
                         delta_best_move = deltas[0].first;
                         best_move = deltas[0].second;
                         type_best_move = 2;
+                        tmp_v = { v1,v2 };
                     }
                 }
             }
         }
         if(type_best_move > 0 && delta_best_move < 0)
         {
+           
             if(type_best_move == 1)
             {
+                assert(delta_swap_edges(matrix, solution[best_cycle], best_move.first, best_move.second) < 0 && "błąd delty krawedzie");
                 swap_edges(solution[best_cycle], best_move.first, best_move.second);
             }
             else
             {
-                swap_vertexes(solution, best_move.first, best_move.second);
+                int i1 = best_move.first;
+                int i2 = best_move.second;
+                assert(delta_swap_vertexes(matrix,solution, i1, i2) < 0 && "błąd delty");
+                swap_vertexes(solution, i1, i2);
+                /*
+                v1 = tmp_v.first;
+                v2 = tmp_v.second;
+                int c1 = find_vertex(solution, v1);
+                int c2 = find_vertex(solution, v2);
+                assert(c1 == c2 && "błąd cykle");
+                i1 = find_index(solution[c1], v1);
+                i2 = find_index(solution[c2], v2);
+                assert((abs(i1 - i2)== 1 || abs(i1 - i2) == 99) && "błąd indeksy");
+                assert(solution[c1][i1] == v1 && "błąd wierzchołek");
+                assert(solution[c2][i2] == v2 && "błąd wierzchołek");
+                */
+
             }
         }
         else

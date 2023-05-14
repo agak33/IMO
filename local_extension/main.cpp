@@ -6,7 +6,7 @@ using namespace std;
 
 string INPUT_DIR = "./input";
 string INSTANCES[] = { "kroA200.tsp", "kroB200.tsp" };
-string ALGORITHMS[] = {  "ILS1", "ILS2", "ILS2 - with local" };
+string ALGORITHMS[] = { "MSLS", "ILS1", "ILS2", "ILS2 - with local" };
 // string ALGORITHMS[] = { "regret", "steepest", "evaluation memory" };
 string OUTPUT_DIR = "output";
 
@@ -414,12 +414,13 @@ void evaluation_algorithm(
     const string& algorithm,
     const string& instance_name,
     const vector<vector<int>>& matrix,
-    int n=100,
+    int n=10,
     int max_time_ILS=25000000
 )
 {
     vector<Result> results(n); // wszystkie wyniki
     for (int i = 0; i < n; ++i) {
+        cout << algorithm << ", iteration: " << (i + 1) << endl;
         // krok 1 - wygeneruj rozwiązanie
         if (algorithm != "regret"){
             random_solution(matrix, results[i].solution);
@@ -446,19 +447,23 @@ void evaluation_algorithm(
             candidates_algorithm(results[i].solution, matrix);
         }
         else if(algorithm == "ILS1")
-        {  
-            
+        {
+
             ILS1(results[i].solution, matrix, iteration, max_time_ILS);
         }
         else if (algorithm == "ILS2 - with local")
         {
-            
+
             ILS2(results[i].solution, matrix, iteration, max_time_ILS,true);
         }
         else if (algorithm == "ILS2")
         {
-            
+
             ILS2(results[i].solution, matrix, iteration, max_time_ILS);
+        }
+        else if (algorithm == "MSLS")
+        {
+            MSLS(results[i].solution, matrix);
         }
         auto stop = chrono::high_resolution_clock::now();
 
@@ -483,7 +488,11 @@ void evaluation_algorithm(
     float mean_time = accumulate(results.begin(), results.end(), 0, [](const float& a, Result b){ return a + b.time; }) / n;
     cout << "TIME (mean (min - max)) [ms]" << endl;
     cout << round(mean_time) << " (" << (*min_time).time << " - " << (*max_time).time << ")" << endl;
-    
+
+    if (algorithm == "MSLS") {
+        max_time_ILS = ceil(mean_time);
+    }
+
     if( algorithm.find("ILS") != string::npos)
     {
         auto max_iteration = max_element(results.begin(), results.end(), [](Result a, Result b){ return a.iteration < b.iteration; });

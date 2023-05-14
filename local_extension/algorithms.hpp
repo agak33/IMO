@@ -565,7 +565,7 @@ void candidates_algorithm( vector<vector<int>> &solution,const vector<vector<int
         }
         if(type_best_move > 0 && delta_best_move < 0)
         {
-           
+
             if(type_best_move == 1)
             {
                 assert(delta_swap_edges(matrix, solution[best_cycle], best_move.first, best_move.second) < 0 && "błąd delty krawedzie");
@@ -724,6 +724,24 @@ void ILS2(vector<vector<int>> &solution, const vector<vector<int>> &matrix, int 
         if(elapsed_time >= time_limit)
         {
             break;
+        }
+    }
+}
+
+
+void MSLS(vector<vector<int>> &solution, const vector<vector<int>> &matrix, int iterations=100)
+{
+    vector<vector<int>> curr_solution(solution);
+    int best_score = score_cycle(matrix, curr_solution[0]) +  score_cycle(matrix, curr_solution[1]);
+    int curr_score;
+    for(int i = 0; i < iterations; ++i){
+        random_solution(matrix, curr_solution);
+        candidates_algorithm(curr_solution, matrix);
+
+        curr_score = score_cycle(matrix, curr_solution[0]) +  score_cycle(matrix, curr_solution[1]);
+        if (curr_score < best_score) {
+            solution = curr_solution;
+            best_score = curr_score;
         }
     }
 }

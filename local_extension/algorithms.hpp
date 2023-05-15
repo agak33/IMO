@@ -17,14 +17,17 @@ void random_solution(const vector<vector<int>>& matrix, vector<vector<int>>& cyc
 	for(int i = 0; i < matrix.size(); i++) {
         remaining.push_back(i);
     }
-     auto now = std::chrono::system_clock::now();
-    auto seed = now.time_since_epoch().count();
-	auto random_number_generator = std::default_random_engine(seed);
-    shuffle(remaining.begin(), remaining.end(), random_number_generator);
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    shuffle (remaining.begin(), remaining.end(), std::default_random_engine(seed));
 
     int middle_index = ceil(remaining.size() / 2.0);
-    copy(remaining.begin(), remaining.begin() + middle_index, back_inserter(cycles[0]));
-    copy(remaining.begin() + middle_index, remaining.end(), back_inserter(cycles[1]));
+    if (cycles[0].size() == 0) {
+        copy(remaining.begin(), remaining.begin() + middle_index, back_inserter(cycles[0]));
+        copy(remaining.begin() + middle_index, remaining.end(), back_inserter(cycles[1]));
+    } else {
+        copy(remaining.begin(), remaining.begin() + middle_index, cycles[0].begin());
+        copy(remaining.begin() + middle_index, remaining.end(), cycles[1].begin());
+    }
 }
 
 pair<int, int> regret2(const vector<vector<int>>& matrix, set<int>& remaining, vector<int>& cycle, float weight=1.37)
@@ -652,7 +655,7 @@ void ILS1(vector<vector<int>> &solution,const vector<vector<int>> &matrix, int &
             copy(tmp_solution.begin(), tmp_solution.end(), solution.begin());
         }
         auto end = std::chrono::high_resolution_clock::now();
-        auto elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
         if(elapsed_time >= time_limit)
         {
             break;
@@ -720,7 +723,7 @@ void ILS2(vector<vector<int>> &solution, const vector<vector<int>> &matrix, int 
             copy(tmp_solution.begin(), tmp_solution.end(), solution.begin());
         }
         auto end = std::chrono::high_resolution_clock::now();
-        auto elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
         if(elapsed_time >= time_limit)
         {
             break;
@@ -731,17 +734,26 @@ void ILS2(vector<vector<int>> &solution, const vector<vector<int>> &matrix, int 
 
 void MSLS(vector<vector<int>> &solution, const vector<vector<int>> &matrix, int iterations=100)
 {
-    vector<vector<int>> curr_solution(solution);
-    int best_score = score_cycle(matrix, curr_solution[0]) +  score_cycle(matrix, curr_solution[1]);
-    int curr_score;
-    for(int i = 0; i < iterations; ++i){
-        random_solution(matrix, curr_solution);
-        candidates_algorithm(curr_solution, matrix);
+    vector<vector<vector<int>>> solution_candidates(iterations);
+    for(int i = 0; i < iterations; ++i) {
+        solution_candidates[i] = vector<vector<int>>(solution);
+        random_solution(matrix, solution_candidates[i]);
+    }
 
-        curr_score = score_cycle(matrix, curr_solution[0]) +  score_cycle(matrix, curr_solution[1]);
-        if (curr_score < best_score) {
-            solution = curr_solution;
-            best_score = curr_score;
+    int best_solution_index = 0;
+    int best_solution_score = INT_MAX;
+    int curr_score = INT_MAX;
+
+    for(int i = 0; i < iterations; ++i){
+        // cout << (i + 1) << "... ";
+        candidates_algorithm(solution_candidates[i], matrix);
+
+        curr_score = score_cycle(matrix, solution_candidates[i][0]) +  score_cycle(matrix, solution_candidates[i][1]);
+        if (curr_score < best_solution_score) {
+            best_solution_index = i;
+            best_solution_score = curr_score;
         }
     }
+    solution = solution_candidates[best_solution_index];
+    // cout << endl;
 }

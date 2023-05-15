@@ -489,10 +489,6 @@ void evaluation_algorithm(
     cout << "TIME (mean (min - max)) [ms]" << endl;
     cout << round(mean_time) << " (" << (*min_time).time << " - " << (*max_time).time << ")" << endl;
 
-    if (algorithm == "MSLS") {
-        max_time_ILS = ceil(mean_time);
-    }
-
     if( algorithm.find("ILS") != string::npos)
     {
         auto max_iteration = max_element(results.begin(), results.end(), [](Result a, Result b){ return a.iteration < b.iteration; });

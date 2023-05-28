@@ -7,7 +7,7 @@ using namespace std;
 string INPUT_DIR = "./input";
 string RESULTS_FILE = "results";
 string INSTANCES[] = { "kroA200.tsp", "kroB200.tsp" };
-string ALGORITHMS[] = { "MSLS" };
+string ALGORITHMS[] = { "genetic - with local", "genetic" };
 // string ALGORITHMS[] = { "regret", "steepest", "evaluation memory" };
 string OUTPUT_DIR = "output";
 
@@ -419,6 +419,7 @@ void evaluation_algorithm(
     int max_time_ILS=25000000
 )
 {
+    max_time_ILS = instance_name == "kroA200.tsp" ? 114000 : 68000;
     vector<Result> results(n); // wszystkie wyniki
     for (int i = 0; i < n; ++i) {
         cout << algorithm << ", iteration: " << (i + 1) << endl;
@@ -496,7 +497,7 @@ void evaluation_algorithm(
     auto min_time = min_element(results.begin(), results.end(), [](Result a, Result b){ return a.time < b.time; });
     float mean_time = accumulate(results.begin(), results.end(), 0, [](const float& a, Result b){ return a + b.time; }) / n;
 
-    file.open(OUTPUT_DIR + "/" + RESULTS_FILE, ios::out);
+    file.open(OUTPUT_DIR + "/" + RESULTS_FILE, ios::app);
     if (file.good()) {
         file << "INSTANCE: " << instance_name << "; ALGO: " << algorithm << endl;
 
@@ -506,7 +507,7 @@ void evaluation_algorithm(
         file << "TIME (mean (min - max)) [ms]" << endl;
         file << round(mean_time) << " (" << (*min_time).time << " - " << (*max_time).time << ")" << endl;
 
-        if( algorithm.find("ILS") != string::npos)
+        if( algorithm.find("ILS") != string::npos || algorithm.find("genetic") != string::npos)
         {
             auto max_iteration = max_element(results.begin(), results.end(), [](Result a, Result b){ return a.iteration < b.iteration; });
             auto min_iteration = min_element(results.begin(), results.end(), [](Result a, Result b){ return a.iteration < b.iteration; });
@@ -517,6 +518,7 @@ void evaluation_algorithm(
     } else {
         cout << "ERROR WHILE OPENING THE RESULTS FILE !!!!!!!" << endl;
     }
+    file.close();
 
     // best solution
     save_cycles_to_file(
@@ -543,7 +545,7 @@ int main() {
 
         for(string algorithm : ALGORITHMS)
         {
-            evaluation_algorithm("algorithm", instance, matrix);
+            evaluation_algorithm(algorithm, instance, matrix);
             cout << "-----------------------------------" << "\n";
         }
     }

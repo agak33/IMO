@@ -5,10 +5,10 @@ compile:
 run:
 	mkdir -p output plots
 	./out
-	cd ..; python visualisation.py -i local_extension/output -f local_extension/input -o local_extension/plots
+	cd ..; python visualisation.py -i genetic/output -f genetic/input -o genetic/plots
 
 viz:
-	cd ..; python visualisation.py -i local_extension/output -f local_extension/input -o local_extension/plots
+	cd ..; python visualisation.py -i genetic/output -f genetic/input -o genetic/plots
 
 clean:
 	rm ./output/*

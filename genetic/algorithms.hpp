@@ -772,6 +772,11 @@ void crossover(const vector<vector<int>>& matrix, const vector<vector<int>> &par
     vector<int> deleted_vertex;
     vector<vector<int>> counter(2);
 
+    vector<vector<bool>> has_egde(200);
+    for (int i = 0; i < 200; ++i){
+        has_egde[i] = vector<bool>(200, false);
+    }
+
     // usuwanie kawędzi (?)
     for(int i=0;i<2; i++)
     {
@@ -781,7 +786,10 @@ void crossover(const vector<vector<int>>& matrix, const vector<vector<int>> &par
             counter[i].push_back(0);
             int e1 = min(solution[i][j], solution[i][(j+1)%n]);
             int e2 = max(solution[i][j], solution[i][(j+1)%n]);
-            deleted_edges.push_back({e1,e2});
+            // deleted_edges.push_back({e1,e2});
+
+            has_egde[e1][e2] = true;
+            has_egde[e2][e1] = true;
         }
     }
     // dla każdego wierzchołka oznaczamy ile krawędzi z nim związanych zostaje usunięte
@@ -792,7 +800,8 @@ void crossover(const vector<vector<int>>& matrix, const vector<vector<int>> &par
         {
             int e1 = min(parent_solution_copy[i][j], parent_solution_copy[i][(j+1)%n]);
             int e2 = max(parent_solution_copy[i][j], parent_solution_copy[i][(j+1)%n]);
-            if(find(deleted_edges.begin(), deleted_edges.end(), make_pair(e1,e2)) == deleted_edges.end())
+            // if(find(deleted_edges.begin(), deleted_edges.end(), make_pair(e1,e2)) == deleted_edges.end())
+            if(!has_egde[e1][e2])
             {
                 counter[i][j] -=1;
                 counter[i][(j + 1) % n] -= 1;
@@ -817,7 +826,9 @@ void crossover(const vector<vector<int>>& matrix, const vector<vector<int>> &par
         }
     }
     set<int> remaining(deleted_vertex.begin(), deleted_vertex.end());
+
     init_regret2(parent_solution_copy, matrix,remaining, 1.37,solution_size);
+    make_random_moves(3, parent_solution_copy);
 
     new_solution = vector<vector<int>>(parent_solution_copy);
 
@@ -845,7 +856,7 @@ class Solution {
 };
 
 
-void genetic(vector<vector<int>> &solution, const vector<vector<int>> &matrix, int& iteration, int time_limit, const int population_size = 20, const bool use_local = false)
+void genetic(vector<vector<int>> &solution, const vector<vector<int>> &matrix, int& iteration, int time_limit, const bool use_local = false, const int population_size = 20)
 {
     vector<Solution> population(population_size);
     for (int i = 0; i < population.size(); ++i) {
@@ -857,35 +868,40 @@ void genetic(vector<vector<int>> &solution, const vector<vector<int>> &matrix, i
     }
 
     int words_solution_index = max_element(population.begin(), population.end(), [](const Solution& a, const Solution& b){ return a.score < b.score; }) - population.begin();
-
+    // cout << "population generated" << endl;
     int sol1, sol2;
     iteration = 0;
 
     auto start = std::chrono::high_resolution_clock::now();
     while(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count() < time_limit)
     {
+        ++iteration;
+        // cout << "iteration: " << iteration << endl;
         sol1 = rand() % population_size;
         do {
             sol2 = rand() % population_size;
         } while(sol1 == sol2);
+
+        // cout << "Chosen: " << sol1 << " " << sol2 <<endl;
 
         vector<vector<int>> new_solution;
         crossover(matrix, population[sol1].solution, population[sol2].solution, new_solution);
 
         if(use_local) {
             candidates_algorithm(new_solution, matrix);
-            ++iteration;
         }
         int new_score = score_cycles(matrix, new_solution);
 
         if (new_score < population[words_solution_index].score && find(population.begin(), population.end(), new_score) == population.end()) {
             population[words_solution_index] = Solution(new_solution, new_score);
+            // cout << "New score was added: " << new_score << endl;
             words_solution_index = max_element(population.begin(), population.end(), [](const Solution& a, const Solution& b){ return a.score < b.score; }) - population.begin();
         }
     }
 
     int best_solution_index = min_element(population.begin(), population.end(), [](const Solution& a, const Solution& b){ return a.score < b.score; }) - population.begin();
     solution = population[best_solution_index].solution;
+    cout << population[best_solution_index].score << endl;
 }
 
 

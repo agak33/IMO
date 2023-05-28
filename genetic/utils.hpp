@@ -96,6 +96,11 @@ int score_cycle(const vector<vector<int>>& matrix,const vector<int>& cycle)
 	return score;
 }
 
+int score_cycles(const vector<vector<int>>& matrix, const vector<vector<int>>& cycles)
+{
+	return score_cycle(matrix, cycles[0]) + score_cycle(matrix, cycles[1]);
+}
+
 int find_farthest_vertex(const vector<vector<int>>& matrix, int v, set<int>& remaining)
 {
 	int max_distance = -1;

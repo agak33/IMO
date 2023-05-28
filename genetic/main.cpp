@@ -5,8 +5,9 @@
 using namespace std;
 
 string INPUT_DIR = "./input";
+string RESULTS_FILE = "results";
 string INSTANCES[] = { "kroA200.tsp", "kroB200.tsp" };
-string ALGORITHMS[] = { "MSLS", "ILS1", "ILS2", "ILS2 - with local" };
+string ALGORITHMS[] = { "MSLS" };
 // string ALGORITHMS[] = { "regret", "steepest", "evaluation memory" };
 string OUTPUT_DIR = "output";
 
@@ -430,6 +431,7 @@ void evaluation_algorithm(
         float time;
         int iteration=0;
         auto start = chrono::high_resolution_clock::now();
+
         if (algorithm == "regret")
         {
             regrest_heuristics(matrix, results[i].solution);
@@ -465,6 +467,14 @@ void evaluation_algorithm(
         {
             MSLS(results[i].solution, matrix);
         }
+        else if (algorithm == "genetic")
+        {
+            genetic(results[i].solution, matrix, iteration, max_time_ILS);
+        }
+        else if (algorithm == "genetic - with local")
+        {
+            genetic(results[i].solution, matrix, iteration, max_time_ILS, true);
+        }
         auto stop = chrono::high_resolution_clock::now();
 
         results[i].time = chrono::duration_cast<chrono::milliseconds>(stop - start).count();
@@ -473,36 +483,40 @@ void evaluation_algorithm(
         // cout << i << " INSTANCE: " << instance_name << "; ALGO: " << algorithm << "; CYCLE ALGO: " << cycle_algo << endl;
         // cout << "DELTA: " << d << "; SCORE: " << results[i].score << "; TIME: " << results[i].time << endl;
     }
-    cout << "INSTANCE: " << instance_name << "; ALGO: " << algorithm << endl;
+
+    fstream file;
 
     // score
     auto max_score = max_element(results.begin(), results.end(), [](Result a, Result b){ return a.score < b.score; });
     auto min_score = min_element(results.begin(), results.end(), [](Result a, Result b){ return a.score < b.score; });
     int mean_score = accumulate(results.begin(), results.end(), 0, [](const int& a, Result b){ return a + b.score; }) / n;
-    cout << "SCORE (mean (min - max))" << endl;
-    cout << mean_score << " (" << (*min_score).score << " - " << (*max_score).score << ")" << endl;
 
     // time
     auto max_time = max_element(results.begin(), results.end(), [](Result a, Result b){ return a.time < b.time; });
     auto min_time = min_element(results.begin(), results.end(), [](Result a, Result b){ return a.time < b.time; });
     float mean_time = accumulate(results.begin(), results.end(), 0, [](const float& a, Result b){ return a + b.time; }) / n;
-    cout << "TIME (mean (min - max)) [ms]" << endl;
-    cout << round(mean_time) << " (" << (*min_time).time << " - " << (*max_time).time << ")" << endl;
 
-    if( algorithm.find("ILS") != string::npos)
-    {
-        auto max_iteration = max_element(results.begin(), results.end(), [](Result a, Result b){ return a.iteration < b.iteration; });
-        auto min_iteration = min_element(results.begin(), results.end(), [](Result a, Result b){ return a.iteration < b.iteration; });
-        float mean_iteration = accumulate(results.begin(), results.end(), 0, [](const float& a, Result b){ return a + b.iteration; }) / n;
-        cout << "ITERATION (mean (min - max))" << endl;
-        cout << mean_iteration << " (" << (*min_iteration).iteration << " - " << (*max_iteration).iteration << ")" << endl;
+    file.open(OUTPUT_DIR + "/" + RESULTS_FILE, ios::out);
+    if (file.good()) {
+        file << "INSTANCE: " << instance_name << "; ALGO: " << algorithm << endl;
+
+        file << "SCORE (mean (min - max))" << endl;
+        file << mean_score << " (" << (*min_score).score << " - " << (*max_score).score << ")" << endl;
+
+        file << "TIME (mean (min - max)) [ms]" << endl;
+        file << round(mean_time) << " (" << (*min_time).time << " - " << (*max_time).time << ")" << endl;
+
+        if( algorithm.find("ILS") != string::npos)
+        {
+            auto max_iteration = max_element(results.begin(), results.end(), [](Result a, Result b){ return a.iteration < b.iteration; });
+            auto min_iteration = min_element(results.begin(), results.end(), [](Result a, Result b){ return a.iteration < b.iteration; });
+            float mean_iteration = accumulate(results.begin(), results.end(), 0, [](const float& a, Result b){ return a + b.iteration; }) / n;
+            file << "ITERATION (mean (min - max))" << endl;
+            file << mean_iteration << " (" << (*min_iteration).iteration << " - " << (*max_iteration).iteration << ")" << endl;
+        }
+    } else {
+        cout << "ERROR WHILE OPENING THE RESULTS FILE !!!!!!!" << endl;
     }
-    // delta
-    // auto max_delta = max_element(results.begin(), results.end(), [](Result a, Result b){ return a.delta < b.delta; });
-    // auto min_delta = min_element(results.begin(), results.end(), [](Result a, Result b){ return a.delta < b.delta; });
-    // int mean_delta = accumulate(results.begin(), results.end(), 0, [](const int& a, Result b){ return a + b.delta; }) / n;
-    // cout << "DELTA (mean (min - max))" << endl;
-    // cout << mean_delta << " (" << (*max_delta).delta << " - " << (*min_delta).delta << ")" << endl;
 
     // best solution
     save_cycles_to_file(
@@ -529,7 +543,7 @@ int main() {
 
         for(string algorithm : ALGORITHMS)
         {
-            evaluation_algorithm(algorithm, instance, matrix);
+            evaluation_algorithm("algorithm", instance, matrix);
             cout << "-----------------------------------" << "\n";
         }
     }

@@ -7,8 +7,8 @@ using namespace std;
 string INPUT_DIR = "./input";
 string INSTANCES[] = { "kroA200.tsp", "kroB200.tsp" };
 //string ALGORITHMS[] = { "MSLS", "ILS1", "ILS2", "ILS2 - with local" };
-// string ALGORITHMS[] = { "regret", "steepest", "evaluation memory" };
-string ALGORITHMS[] = {"MSLS","ILS2 - with local" };
+//string ALGORITHMS[] = { "regret" };
+string ALGORITHMS[] = {"ILS2 - with local"};
 string OUTPUT_DIR = "output";
 
 enum applicable {
@@ -416,7 +416,7 @@ void evaluation_algorithm(
     const string& instance_name,
     const vector<vector<int>>& matrix,
     int n=10,
-    int max_time_ILS=25000000
+    int max_time_ILS=125825
 )
 {
     vector<Result> results(n); // wszystkie wyniki
@@ -424,9 +424,10 @@ void evaluation_algorithm(
         cout << algorithm << ", iteration: " << (i + 1) << endl;
         // krok 1 - wygeneruj rozwiązanie
         if (algorithm != "regret"){
-            random_solution(matrix, results[i].solution);
+            //random_solution(matrix, results[i].solution);
+		regrest_heuristics(matrix, results[i].solution); // tylko na potrzeby tego zadania
         }
-
+	
         // krok 2 - uruchom algorytm dla rozwiązania losowego
         float time;
         int iteration=0;

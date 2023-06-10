@@ -6,6 +6,7 @@
 #include <random>
 #include <numeric>
 #include<cassert>
+#include <climits>
 
 #include "utils.hpp"
 
@@ -682,6 +683,42 @@ void make_big_perturbation(vector<vector<int>> &solution, set<int> & deleted, fl
         solution[cycle_index].erase(solution[cycle_index].begin() + vertex_index, solution[cycle_index].begin()+vertex_index+1);
     }
 }
+
+void make_big_perturbation_chain(vector<vector<int>> &solution, set<int> & deleted, float moves_fraction = 0.2)
+{
+    int vertex_to_delete = moves_fraction*solution[0].size();
+    auto now = std::chrono::system_clock::now();
+    auto seed = now.time_since_epoch().count();
+    default_random_engine rng = default_random_engine(seed);
+    std::uniform_int_distribution<int> dist1(0, 1);
+    for(int i=0; i<solution.size(); i++) //iteracja po cyklach
+    {
+        int n = solution[i].size(); // rozmiar cyklu
+        std::uniform_int_distribution<int> dist(0, n-1);
+        int start_vertex = dist(rng);
+        for(int j=0;j<vertex_to_delete/2; j++)
+        {
+           // cout << solution[i].size() << ":" << start_vertex << "\n";
+            deleted.insert(solution[i][start_vertex]);
+            solution[i].erase(solution[i].begin() + start_vertex, solution[i].begin()+start_vertex+1);
+            n = solution[i].size();
+            start_vertex = (start_vertex +1) %n;
+        }
+    }
+    /*
+    for(int i=0; i<vertex_to_delete; i=i+2) // dla łatwości implementacji usuwamy z każdego cyklu po tyle samo wierzchołków
+    {
+        int cycle_index = dist1(rng);
+        std::uniform_int_distribution<int> dist(0, solution[cycle_index].size()-1);
+        int vertex_index = dist(rng);
+        deleted.insert(solution[cycle_index][vertex_index]);
+        solution[cycle_index].erase(solution[cycle_index].begin() + vertex_index, solution[cycle_index].begin()+vertex_index+1);
+        vertex_index = dist(rng);
+        cycle_index = 1-cycle_index;
+        deleted.insert(solution[cycle_index][vertex_index]);
+        solution[cycle_index].erase(solution[cycle_index].begin() + vertex_index, solution[cycle_index].begin()+vertex_index+1);
+    }*/
+}
 void init_regret2(vector<vector<int>> &cycles,const vector<vector<int>> &matrix, set<int> &remaining, float weight = 1.37)
 {
 
@@ -710,7 +747,7 @@ void ILS2(vector<vector<int>> &solution, const vector<vector<int>> &matrix, int 
         vector<vector<int>> tmp_solution(solution.size());
         copy(solution.begin(), solution.end(), tmp_solution.begin());
         set <int> deleted;
-        make_big_perturbation(tmp_solution, deleted);
+        make_big_perturbation_chain(tmp_solution, deleted);
         init_regret2(tmp_solution, matrix, deleted);
         int score_solution = score_cycle(matrix, solution[0]) +  score_cycle(matrix, solution[1]);
         if(with_local)

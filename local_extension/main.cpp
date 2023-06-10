@@ -6,8 +6,9 @@ using namespace std;
 
 string INPUT_DIR = "./input";
 string INSTANCES[] = { "kroA200.tsp", "kroB200.tsp" };
-string ALGORITHMS[] = { "MSLS", "ILS1", "ILS2", "ILS2 - with local" };
+//string ALGORITHMS[] = { "MSLS", "ILS1", "ILS2", "ILS2 - with local" };
 // string ALGORITHMS[] = { "regret", "steepest", "evaluation memory" };
+string ALGORITHMS[] = {"MSLS","ILS2 - with local" };
 string OUTPUT_DIR = "output";
 
 enum applicable {

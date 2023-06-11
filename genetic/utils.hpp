@@ -72,6 +72,7 @@ void save_cycles_to_file(string file_name, vector<vector<int>>& cycles)
 			File << vertex_index + 1 << "\n";
 		}
 	}
+	File.close();
 }
 
 void make_distance_matrix(const vector<vector<int>>& coords, vector<vector<int>>& matrix)

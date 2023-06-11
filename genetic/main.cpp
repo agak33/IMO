@@ -6,7 +6,7 @@ using namespace std;
 
 string INPUT_DIR = "./input";
 string RESULTS_FILE = "results";
-string INSTANCES[] = { "kroA200.tsp", "kroB200.tsp" };
+string INSTANCES[] = { "kroa200.tsp", "krob200.tsp", "kroa100.tsp", "krob100.tsp" };
 string ALGORITHMS[] = { "genetic - with local", "genetic" };
 // string ALGORITHMS[] = { "regret", "steepest", "evaluation memory" };
 string OUTPUT_DIR = "output";
@@ -529,6 +529,45 @@ void evaluation_algorithm(
 }
 
 
+void xd(string instance, const vector<vector<int>>& matrix) {
+
+    int best_score = INT_MAX;
+    int max_score_i = 0;
+    fstream results_file;
+    results_file.open("output_tests/" + instance + "_results", ios::out);
+    for(int i = 1; i <= 1000; ++i) {
+        cout << instance << ", iteration: " << i << endl;
+        // krok 1 - wygeneruj rozwiązanie
+        vector<vector<int>> solution = vector< vector<int> >(2);
+        random_solution(matrix, solution);
+
+        greedy_local_search(solution, matrix, true);
+
+        int score = score_cycles(matrix, solution);
+        if (score < best_score) {
+            best_score = score;
+            max_score_i = i;
+        }
+
+        save_cycles_to_file(
+            "output_tests/" + instance + "_" + to_string(i),
+            solution
+        );
+
+        results_file << score << endl;
+    }
+    results_file.close();
+    fstream file;
+    file.open("output_tests/XD", ios::app);
+    if (file.good()) {
+        file << "best instance " << max_score_i << " score: " << best_score << endl;
+    } else {
+        cout << "ERROR WHILE OPENING THE RESULTS FILE !!!!!!!" << endl;
+    }
+    file.close();
+}
+
+
 int main() {
     srand(time(nullptr));
     for (string instance : INSTANCES)
@@ -543,11 +582,7 @@ int main() {
 		}
 		make_distance_matrix(v, matrix);
 
-        for(string algorithm : ALGORITHMS)
-        {
-            evaluation_algorithm(algorithm, instance, matrix);
-            cout << "-----------------------------------" << "\n";
-        }
+        xd(instance, matrix);
     }
 
 }

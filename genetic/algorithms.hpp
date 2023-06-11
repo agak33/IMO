@@ -453,6 +453,118 @@ int steepest_local_search(
     return solution_delta;
 }
 
+int greedy_local_search(
+    vector<vector<int>>& solution,
+    const vector<vector<int>>& matrix,
+    const bool flag_swap_edges
+)
+{
+    int solution_delta = 0;
+
+    while(true)
+    {
+        bool flag_end = true;
+        int cycle_index = rand()%2;     // od którego cylu zaczniemy
+        int edges_or_vertex = rand()%2; // zaczynbamy od zamiany krawędzi albo wierzchołków
+        int outside_insde = rand()%2;
+
+        if(flag_swap_edges == true)    // mamy zamianę krawędzi
+        {
+            if(edges_or_vertex == true)
+            {
+                // 1. zamiana krawedzi w obu cyklach
+                // 2. zamiana wierzcholkow miedzy cyklami
+                int delta = move_swap_edges(matrix, solution[cycle_index],false);
+
+                if(!delta)
+                {
+                    delta = move_swap_edges(matrix, solution[1-cycle_index],false);
+                }
+
+                if(!delta)
+                {
+                    delta = move_swap_vertexes(matrix, solution);
+                }
+
+                if(!delta)
+                {
+                    return solution_delta;
+                }
+                solution_delta += delta;
+            }
+            else
+            {
+                // 1. zamiana wierzcholkow miedzy cyklami
+                // 2. zamiana krawedzi w obu cyklach
+                int delta = move_swap_vertexes(matrix, solution);
+
+                if(!delta)
+                {
+                    delta = move_swap_edges(matrix, solution[cycle_index],false);
+                }
+
+                if(!delta)
+                {
+                    delta = move_swap_edges(matrix, solution[1-cycle_index],false);
+                }
+
+                if(!delta)
+                {
+                    return solution_delta;
+                }
+                solution_delta += delta;
+            }
+        }
+        else
+        {
+            if(edges_or_vertex == true)
+            {
+                // 1. zamiana wierzcholkow w obu cyklach
+                // 2. zamiana wierzcholkow miedzy cyklami
+                int delta = move_swap_vertexes(matrix, solution[cycle_index]);
+
+                if(!delta)
+                {
+                    delta = move_swap_vertexes(matrix, solution[1-cycle_index]);
+                }
+
+                if(!delta)
+                {
+                    delta = move_swap_vertexes(matrix, solution);
+                }
+
+                if(!delta)
+                {
+                    return solution_delta;
+                }
+                solution_delta += delta;
+            }
+            else
+            {
+                // 1. zamiana wierzcholkow miedzy cyklami
+                // 2. zamiana wierzcholkow w obu cyklach
+                int delta = move_swap_vertexes(matrix, solution);
+
+                if(!delta)
+                {
+                    delta = move_swap_vertexes(matrix, solution[cycle_index]);
+                }
+
+                if(!delta)
+                {
+                   delta = move_swap_vertexes(matrix, solution[1-cycle_index]);
+                }
+
+                if(!delta)
+                {
+                    return solution_delta;
+                }
+                solution_delta += delta;
+            }
+        }
+    }
+}
+
 void make_candidate_matrix(const vector<vector<int>> &matrix, vector<vector<int>> &candidate_matrix, int n = 10)
 {
     for (int i = 0; i < candidate_matrix.size(); i++)

@@ -1,0 +1,5 @@
+INSTANCE: kroA200.tsp; ALGO: algorithm
+SCORE (mean (min - max))
+36664 (35459 - 37467)
+TIME (mean (min - max)) [ms]
+29376 (26015 - 37715)
